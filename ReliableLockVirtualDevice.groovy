@@ -80,7 +80,7 @@ def lock() {
 // Tell the parent app to reliably unlock the physical lock
 def unlock() {
 	log "${device.displayName}.unlock()"
-	
+    
 	def parent = getParent()
 	if (parent == null) {
 		return
@@ -91,18 +91,28 @@ def unlock() {
 
 
 // Mark as locked without sending the event back to the parent app.  Called when the physical lock has locked, to prevent cyclical firings.
-def markAsLocked() {
-	log "${device.displayName}.markAsLocked()"
-	
-	sendEvent(name: "lock", value: "locked")
+def markAsLocked(isManual, isKeypad) {
+    log "${device.displayName}.markAsLocked() isManual[${isManual}] isKeypad[${isKeypad}]"
+    if (isKeypad == true) {
+        sendEvent(name: "lock", value: "keypadLocked")
+    } else if (isManual == true) {
+        sendEvent(name: "lock", value: "manuallyLocked")
+    } else {
+	    sendEvent(name: "lock", value: "locked")
+    }
 }
 
 
 // Mark as unlocked without sending the event back to the parent app.  Called when the physical lock has unlocked, to prevent cyclical firings.
-def markAsUnlocked() {
-	log "${device.displayName}.markAsUnlocked()"
-	
-	sendEvent(name: "lock", value: "unlocked")
+def markAsUnlocked(isManual, user) {
+    log "${device.displayName}.markAsUnlocked() isManual[${isManual}] user[${user}]"
+    if (user != null) {
+        sendEvent(name: "lock", value: "keypadUnlocked [${user}]")
+    } else if (isManual == true) {
+        sendEvent(name: "lock", value: "manuallyUnlocked")
+    } else {
+	    sendEvent(name: "lock", value: "unlocked")
+    }
 }
 
 
