@@ -160,17 +160,31 @@ def refreshWrappedLock() {
 
 
 def wrappedLockHandler(evt) {
+    log("wrappedLock event: ${evt.name} : ${evt.descriptionText}")
+    def isManual = false
+    if (evt.descriptionText.contains('was manually')) {
+      isManual = true   
+    }
+    log("wrappedLock isManual[${isManual}]")
 	def reliableLock = getChildDevice("Reliable-${wrappedLock.displayName}")
 
 	if (wrappedLock.currentValue("lock") == "locked") {
 		log "${wrappedLock.displayName}:locked detected"
 		log "${reliableLock.displayName}:setting locked"
-		reliableLock.markAsLocked()
+        def isKeypad = false
+        if (evt.descriptionText.contains('was locked via keypad')) {
+          isKeypad = true   
+        }        
+		reliableLock.markAsLocked(isManual, isKeypad)
 	}
 	else {
 		log "${wrappedLock.displayName}:unlocked detected"
 		log "${reliableLock.displayName}:setting unlocked"
-		reliableLock.markAsUnlocked()
+        def user = null
+        if (evt.descriptionText.contains('was unlocked by ')) {
+          user = (evt.descriptionText =~ /.*was unlocked by ([^\[]+).*/).with { matches() ? it[0][1] : null }
+        } 
+		reliableLock.markAsUnlocked(isManual, user)
 	}
 }
 
